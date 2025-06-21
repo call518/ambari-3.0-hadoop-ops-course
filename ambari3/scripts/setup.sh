@@ -2,8 +2,8 @@
 
 set -ex
 
-INSTANCES="bigtop_hostname0 bigtop_hostname1 bigtop_hostname2 bigtop_hostname3"
-INSTANCES_WITHOUT_0="bigtop_hostname1 bigtop_hostname2 bigtop_hostname3"
+INSTANCES="bigtop-hostname0 bigtop-hostname1 bigtop-hostname2 bigtop-hostname3"
+INSTANCES_WITHOUT_0="bigtop-hostname1 bigtop-hostname2 bigtop-hostname3"
 
 for i in $INSTANCES ; do
 	if [ $(docker compose ps |grep -c $i) == "0" ] ; then
@@ -13,7 +13,7 @@ for i in $INSTANCES ; do
 done
 
 for i in $INSTANCES ; do
-	docker compose exec -it $i dnf install -y sudo openssh-server openssh-clients which iproute net-tools less vim-enhanced
+	docker compose exec -it $i dnf install -y sudo openssh-server openssh-clients which iproute net-tools less vim-enhanced telnet lsof wget curl
 	docker compose exec -it $i dnf install -y initscripts wget curl tar unzip git
 	docker compose exec -it $i dnf install -y dnf-plugins-core
 	docker compose exec -it $i dnf config-manager --set-enabled powertools
@@ -21,7 +21,10 @@ for i in $INSTANCES ; do
 done
 
 for i in $INSTANCES ; do
-	docker compose exec -it $i ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
+	#docker compose exec -it $i ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
+    ### Add by call518
+	docker compose exec -it $i sh -c 'rm -f /root/.ssh/id_rsa /root/.ssh/id_rsa.pub && ssh-keygen -t rsa -N "" -b 2048 -m PEM -f /root/.ssh/id_rsa'
+    ###
 	
 	# Start SSH service
 	docker compose exec -it $i systemctl enable sshd
@@ -33,16 +36,16 @@ for i in $INSTANCES ; do
 	docker compose exec -it $i sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/Rocky-Devel.repo
 done
 
-docker compose cp bigtop_hostname0:/root/.ssh/id_rsa.pub bigtop_hostname0.pub
+docker compose cp bigtop-hostname0:/root/.ssh/id_rsa.pub bigtop-hostname0.pub
 
 for i in $INSTANCES ; do
-	docker compose cp bigtop_hostname0.pub $i:/root/.ssh/authorized_keys
+	docker compose cp bigtop-hostname0.pub $i:/root/.ssh/authorized_keys
 	docker compose exec -it $i chown root:root /root/.ssh/authorized_keys 
 	docker compose exec -it $i chmod 600 /root/.ssh/authorized_keys
-	docker compose exec -it bigtop_hostname0 ssh -o StrictHostKeyChecking=no $i echo "Connection successful"
+	docker compose exec -it bigtop-hostname0 ssh -o StrictHostKeyChecking=no $i echo "Connection successful"
 done
 
-rm bigtop_hostname0.pub
+rm bigtop-hostname0.pub
 
 
 # setup hostname

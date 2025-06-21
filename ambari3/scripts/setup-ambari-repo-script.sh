@@ -15,10 +15,14 @@ dnf makecache
 
 dnf install nginx -y
 
+### Add by call518
+sed -i '/^\s*listen\s*\[::\]:80.*default_server;/ s/^[[:space:]]*/# /' /etc/nginx/nginx.conf
+###
+
 sudo tee /etc/nginx/conf.d/ambari-repo.conf << EOF
 server {
     listen 80;
-    server_name bigtop_hostname0 bigtop-hostname0.demo.local;
+    server_name bigtop-hostname0 bigtop-hostname0.demo.local;
     root /var/repo/ambari;
     autoindex on;
     location / {
@@ -33,7 +37,7 @@ systemctl enable nginx
 tee /etc/yum.repos.d/ambari.repo << EOF
 [ambari]
 name=Ambari Repository
-baseurl=http://bigtop_hostname0
+baseurl=http://bigtop-hostname0
 gpgcheck=0
 enabled=1
 EOF

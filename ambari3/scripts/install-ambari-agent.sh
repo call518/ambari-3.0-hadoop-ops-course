@@ -2,7 +2,7 @@
 
 set -ex
 
-INSTANCES="bigtop_hostname0 bigtop_hostname1 bigtop_hostname2 bigtop_hostname3"
+INSTANCES="bigtop-hostname0 bigtop-hostname1 bigtop-hostname2 bigtop-hostname3"
 
 for i in $INSTANCES ; do
 	HOSTNAME=$(echo $i |sed s/_/-/g)".demo.local"

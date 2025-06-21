@@ -2,10 +2,16 @@
 
 set -ex
 
+### Add by call518
+ln -sf /usr/bin/python3 /usr/bin/python
+mkdir -p /run/chrony
+touch /run/chrony/chronyd.pid
+###
+
 tee /etc/yum.repos.d/ambari.repo << EOF
 [ambari]
 name=Ambari Repository
-baseurl=http://bigtop_hostname0
+baseurl=http://bigtop-hostname0
 gpgcheck=0
 enabled=1
 EOF

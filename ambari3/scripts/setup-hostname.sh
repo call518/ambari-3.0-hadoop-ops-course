@@ -6,14 +6,14 @@ set -ex
 
 # setup hostnames
 
-INSTANCES="bigtop_hostname0 bigtop_hostname1 bigtop_hostname2 bigtop_hostname3"
+INSTANCES="bigtop-hostname0 bigtop-hostname1 bigtop-hostname2 bigtop-hostname3"
 
 rm -f hosts
 echo '127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 ' > hosts
 for i in $INSTANCES ; do
-	docker compose exec -it $i yum install net-tools -y
+	docker compose exec -it $i yum --disablerepo ambari install net-tools -y
 	docker compose cp getip.sh $i:/root/getip.sh
 	IP=$(docker compose exec -it $i /bin/bash /root/getip.sh)
 	HOSTNAME=$(docker compose exec -it $i hostname)
