@@ -8,8 +8,8 @@ services:
     mem_limit: 8g
     mem_swappiness: 0
     ports:
-      - "8080:8080"
-      #- "3000:3000"
+      - "8080:8080" # Ambari Server UI
+      - "3000:3000" # Ambari Metrics Grafana UI
     privileged: true
     volumes:
       - ./ambari-repo:/var/repo/ambari
