@@ -10,6 +10,7 @@ services:
     ports:
       - "8080:8080" # Ambari Server Web-UI
       - "10001:50070" # HDFS Namenode Web-UI
+      - "14000:14000" # HDFS HTTPFS
       - "10002:8088" # YARN ResourceManager Web-UI
       - "10003:3000" # Ambari Metrics Grafana Web-UI
     privileged: true
