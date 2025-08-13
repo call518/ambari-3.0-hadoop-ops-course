@@ -8,8 +8,10 @@ services:
     mem_limit: 8g
     mem_swappiness: 0
     ports:
-      - "8080:8080" # Ambari Server UI
-      - "3000:3000" # Ambari Metrics Grafana UI
+      - "8080:8080" # Ambari Server Web-UI
+      - "10001:50070" # HDFS Namenode Web-UI
+      - "10002:8088" # YARN ResourceManager Web-UI
+      - "10003:3000" # Ambari Metrics Grafana Web-UI
     privileged: true
     volumes:
       - ./ambari-repo:/var/repo/ambari
@@ -17,6 +19,7 @@ services:
     networks:
       ambari_net:
         ipv4_address: 172.28.0.100
+    restart: unless-stopped
 
   bigtop-hostname1:
     hostname: bigtop-hostname1.demo.local
@@ -32,6 +35,7 @@ services:
     networks:
       ambari_net:
         ipv4_address: 172.28.0.101
+    restart: unless-stopped
 
   bigtop-hostname2:
     hostname: bigtop-hostname2.demo.local
@@ -47,6 +51,7 @@ services:
     networks:
       ambari_net:
         ipv4_address: 172.28.0.102
+    restart: unless-stopped
 
   bigtop-hostname3:
     hostname: bigtop-hostname3.demo.local
@@ -62,6 +67,7 @@ services:
     networks:
       ambari_net:
         ipv4_address: 172.28.0.103
+    restart: unless-stopped
 
 networks:
   ambari_net:
