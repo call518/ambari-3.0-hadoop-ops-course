@@ -91,19 +91,166 @@ java    1175610 root  350u  IPv4 34098303      0t0  TCP *:14000 (LISTEN)
 
 Once HTTPFS is running, you can test it using REST API calls:
 
-### List Root Directory
+### Basic Operations
+
+#### List Root Directory
 ```bash
 curl -i "http://localhost:14000/webhdfs/v1/?op=LISTSTATUS"
 ```
 
-### Get Home Directory Status
+#### Get Home Directory Status
 ```bash
 curl -i "http://localhost:14000/webhdfs/v1/user?op=LISTSTATUS"
 ```
 
-### Create a Directory
+#### Create a Directory
 ```bash
 curl -i -X PUT "http://localhost:14000/webhdfs/v1/user/test?op=MKDIRS"
+```
+
+### File Upload and Download Tutorial
+
+This section demonstrates how to upload and download files using HTTPFS REST API with practical examples.
+
+#### Creating a Test File
+
+First, create a test file for upload testing:
+
+```bash
+# Create a 1GB test file
+dd if=/dev/zero of=test-1g.img bs=1M count=1024
+```
+
+#### File Upload (PUT) Operations
+
+There are two approaches for uploading files via HTTPFS:
+
+##### Method 1: Two-Step PUT Process
+
+This method involves two separate requests - first to get the redirect location, then to upload the actual data.
+
+**Step 1: Get redirect location**
+```bash
+curl -X PUT -i -c ~/.httpfsauth "http://localhost:14000/webhdfs/v1/tmp/test.txt?user.name=hdfs&op=CREATE&overwrite=true"
+```
+
+Expected response:
+```
+HTTP/1.1 307 Temporary Redirect
+Date: Wed, 13 Aug 2025 22:38:29 GMT
+Cache-Control: no-cache
+Set-Cookie: hadoop.auth="u=hdfs&p=hdfs&t=simple-dt&e=1755160709078&s=bcctcZbg/kwFSTosXaC+6WDVmouIGayyv4n4StvJcGA="; Path=/; HttpOnly
+Location: http://localhost:14000/webhdfs/v1/tmp/test.txt?op=CREATE&data=true&user.name=hdfs&overwrite=true
+Content-Type: application/json;charset=utf-8
+Content-Length: 0
+```
+
+**Step 2: Upload the actual file data**
+```bash
+curl -X PUT -i -b ~/.httpfsauth -T ./test-1g.img -H "Content-Type:application/octet-stream" "http://localhost:14000/webhdfs/v1/tmp/test.txt?op=CREATE&data=true&user.name=hdfs&overwrite=true"
+```
+
+Expected response:
+```
+HTTP/1.1 100 Continue
+
+HTTP/1.1 201 Created
+Date: Wed, 13 Aug 2025 22:50:07 GMT
+Location: http://localhost:14000/webhdfs/v1/tmp/test.txt
+Content-Type: application/json
+Transfer-Encoding: chunked
+
+{"Location":"http://localhost:14000/webhdfs/v1/tmp/test.txt"}
+```
+
+##### Method 2: Single-Step PUT Process (with Auto-redirect)
+
+This method handles the redirect automatically in a single command:
+
+```bash
+curl -v -L -X PUT -T ./test-1g.img -c ~/.httpfsauth -b ~/.httpfsauth -H "Content-Type:application/octet-stream" "http://localhost:14000/webhdfs/v1/tmp/test-1g.img?user.name=hdfs&op=CREATE&overwrite=true&createparent=true"
+```
+
+**Parameters explained:**
+- `-v`: Verbose output for debugging
+- `-L`: Follow redirects automatically
+- `-T ./test-1g.img`: Upload the specified file
+- `-c ~/.httpfsauth`: Save cookies to file
+- `-b ~/.httpfsauth`: Send cookies from file
+- `overwrite=true`: Overwrite existing file if present
+- `createparent=true`: Create parent directories if they don't exist
+
+#### File Download (GET) Operation
+
+Download files from HDFS using the OPEN operation:
+
+```bash
+curl -i -L "http://localhost:14000/webhdfs/v1/tmp/test-1g.img?user.name=hdfs&op=OPEN" -o ./downloaded-test-1g.img
+```
+
+**Parameters explained:**
+- `-i`: Include HTTP headers in output
+- `-L`: Follow redirects automatically
+- `-o ./downloaded-test-1g.img`: Save downloaded content to specified file
+- `op=OPEN`: WebHDFS operation to read/download file
+
+#### Verification Commands
+
+After upload/download operations, verify the results:
+
+**Check file exists in HDFS:**
+```bash
+curl -i "http://localhost:14000/webhdfs/v1/tmp/test-1g.img?user.name=hdfs&op=GETFILESTATUS"
+```
+
+**List directory contents:**
+```bash
+curl -i "http://localhost:14000/webhdfs/v1/tmp?user.name=hdfs&op=LISTSTATUS"
+```
+
+**Compare file sizes (local verification):**
+```bash
+# Check original file size
+ls -lh test-1g.img
+
+# Check downloaded file size
+ls -lh downloaded-test-1g.img
+
+# Verify file integrity using checksums
+md5sum test-1g.img downloaded-test-1g.img
+```
+
+#### Common Upload/Download Parameters
+
+| Parameter | Description | Example Values |
+|-----------|-------------|----------------|
+| `user.name` | User identity for the operation | `hdfs`, `admin`, `user1` |
+| `op` | WebHDFS operation type | `CREATE`, `OPEN`, `GETFILESTATUS` |
+| `overwrite` | Overwrite existing files | `true`, `false` |
+| `createparent` | Create parent directories | `true`, `false` |
+| `replication` | HDFS replication factor | `1`, `2`, `3` |
+| `blocksize` | HDFS block size in bytes | `134217728` (128MB) |
+
+#### Error Handling
+
+Common error scenarios and solutions:
+
+**Permission Denied (403):**
+```bash
+# Ensure proper user.name parameter
+curl -i "http://localhost:14000/webhdfs/v1/tmp/test.txt?user.name=hdfs&op=CREATE"
+```
+
+**File Already Exists (403):**
+```bash
+# Add overwrite=true parameter
+curl -i -X PUT "http://localhost:14000/webhdfs/v1/tmp/test.txt?user.name=hdfs&op=CREATE&overwrite=true"
+```
+
+**Parent Directory Not Found (404):**
+```bash
+# Add createparent=true parameter
+curl -i -X PUT "http://localhost:14000/webhdfs/v1/deep/path/test.txt?user.name=hdfs&op=CREATE&createparent=true"
 ```
 
 ## Service Management
