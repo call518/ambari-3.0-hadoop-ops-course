@@ -1,3 +1,7 @@
+# DEPRECATED!!!
+
+**Moved to**: [call518/Ambari-3-Docker-Compose](https://github.com/call518/Ambari-3-Docker-Compose)
+
 # Ambari3 installation instructions
 
 Clone this repository first and cd into the ambari3 directory.
